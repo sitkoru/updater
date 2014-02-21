@@ -1,0 +1,32 @@
+{
+    "name": "sitkoru/cg2_updater",
+    "description": "Update tool for CG2",
+    "keywords": ["cg2"],
+    "homepage": "http://my.cg",
+    "type": "project",
+    "license": "closed",
+    "support": {
+        "issues": "https://github.com/sitkoru/cg2_updater/issues?state=open"
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=5.4.0",
+        "yiisoft/yii2": "*"
+    },
+    "require-dev": {
+    },
+    "scripts": {
+        "post-create-project-cmd": [
+            "yii\\composer\\Installer::setPermission"
+        ]
+    },
+    "config": {
+        "process-timeout": 1800
+    },
+    "extra": {
+        "writable": [
+            "console/runtime",
+            "console/migrations"
+        ]
+    }
+}
