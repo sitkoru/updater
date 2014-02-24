@@ -1,4 +1,4 @@
-cg2_updater
+update
 ===========
 
-Console app for update CG2
+Console app for update CG2/Yamobi2

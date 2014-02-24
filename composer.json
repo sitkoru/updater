@@ -1,32 +1,26 @@
 {
-    "name": "sitkoru/cg2_updater",
-    "description": "Update tool for CG2",
-    "keywords": ["cg2"],
-    "homepage": "http://my.cg",
-    "type": "project",
+    "name": "sitkoru/updater",
+    "description": "Updater for Sitko.ru Yii2 projects",
+    "keywords": ["sitkoru", "cg2", "yii2"],
+    "type": "yii2-extension",
     "license": "closed",
     "support": {
-        "issues": "https://github.com/sitkoru/cg2_updater/issues?state=open"
+
     },
+    "authors": [
+        {
+            "name": "George Drak",
+            "email": "sonicgd@gmail.com"
+        }
+    ],
     "minimum-stability": "dev",
     "require": {
         "php": ">=5.4.0",
-        "yiisoft/yii2": "*"
+        "yiisoft/yii2": "dev-master"
     },
-    "require-dev": {
-    },
-    "scripts": {
-        "post-create-project-cmd": [
-            "yii\\composer\\Installer::setPermission"
-        ]
-    },
-    "config": {
-        "process-timeout": 1800
-    },
-    "extra": {
-        "writable": [
-            "console/runtime",
-            "console/migrations"
-        ]
+    "autoload": {
+        "psr-4": {
+            "sitkoru\\updater\\": ""
+        }
     }
 }
