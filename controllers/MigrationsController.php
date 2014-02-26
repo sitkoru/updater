@@ -53,7 +53,7 @@ class MigrationsController extends MigrateController
         parent::actionUp($limit);
     }
 
-    public function migrateToAppVersion($version)
+    public function actionToAppVersion($version)
     {
         $this->appVersion = $version;
         $history = $this->getMigrationHistory(1, $version);

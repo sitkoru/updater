@@ -83,6 +83,6 @@ EOF;
         if ($this->assetsCommands == []) {
             Console::output("Maybe you forget to set assets commands");
         }
-
+        Console::output("Starting process. Current version is " . $this->currentVersion);
     }
 } 

@@ -30,7 +30,7 @@ class ReleaseController extends Controller
      */
     public $module;
 
-    public function actionUpdate()
+    public function actionIndex()
     {
         //ask for mode
         $modes = [
@@ -39,7 +39,21 @@ class ReleaseController extends Controller
         ];
 
         $mode = Console::select("Choose mode: ", $modes);
+        $this->process($mode);
+    }
 
+    public function actionUpgrade()
+    {
+        $this->process(self::MODE_UPGRADE);
+    }
+
+    public function actionDowngrade()
+    {
+        $this->process(self::MODE_DOWNGRADE);
+    }
+
+    protected function process($mode = null)
+    {
         $version = false;
         switch ($mode) {
             case self::MODE_UPGRADE:
@@ -112,7 +126,7 @@ class ReleaseController extends Controller
     {
         Console::output("Migrate down");
         list($return_var, $result) = $this->execCommand(
-            "./yii updater/migrations/migrateToAppVersion " . $version . " --interactive=0"
+            "./yii updater/migrations/toAppVersion " . $version . " --interactive=0"
         );
         if ($return_var == 0) {
             Console::output("Migrate complete");
