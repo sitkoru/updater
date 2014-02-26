@@ -61,10 +61,12 @@ class ReleaseController extends Controller
      */
     protected function upgrade()
     {
+        Console::output("Starting upgrade");
         $this->execCommand("git fetch");
         $branches = $this->getBranches();
         $select = Console::select("Choose branch: ", $branches);
         $version = $branches[$select];
+        Console::output("Selected version: " . $version);
         $filesUpdated = $this->updateFiles($version);
         if (!$filesUpdated) {
             return false;
@@ -139,10 +141,17 @@ class ReleaseController extends Controller
 
     protected function updateFiles($version)
     {
+        Console::output("Process Git");
         list($return_var, $result) = $this->execCommand(
             "git init && git stash && git fetch --all && git reset --hard " . $this->module->releasePrefix . $version
         );
-        return $return_var == 0;
+        if ($return_var == 0) {
+            Console::output("Files updated");
+            return true;
+        }
+        Console::output("Error while updating files");
+        var_dump($result);
+        return false;
     }
 
     /**
@@ -166,6 +175,7 @@ class ReleaseController extends Controller
 
     private function saveVersion($version)
     {
+        Console::output("Save new version to " . $this->module->versionFilePath);
         $php = str_ireplace("%constant%", $this->module->versionConstant, $this->module->versionFileTemplate);
         $php = str_ireplace("%version%", $version, $php);
         file_put_contents($this->module->versionFilePath, $php);
@@ -173,7 +183,9 @@ class ReleaseController extends Controller
 
     private function runAssets()
     {
+        Console::output("Run assets commands");
         foreach ($this->module->assetsCommands as $command) {
+            Console::output("Exec " . $command);
             $this->execCommand($command);
         }
         //$this->execCommand("lessc cgweb/web/less/cg_all.less cgweb/web/css/cg_all.css");
@@ -182,7 +194,9 @@ class ReleaseController extends Controller
 
     private function runComposer()
     {
+        Console::output("Run composer commands");
         foreach ($this->module->composerCommands as $command) {
+            Console::output("Exec " . $command);
             $this->execCommand($command);
         }
         //$this->execCommand("curl -sS https://getcomposer.org/installer | php");
@@ -192,6 +206,7 @@ class ReleaseController extends Controller
     private function clearCaches()
     {
         if ($this->module->clearCache) {
+            Console::output("Flush cache");
             $this->execCommand("./yii cache/flush");
         }
     }
