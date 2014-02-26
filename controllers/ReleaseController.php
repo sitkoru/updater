@@ -140,7 +140,7 @@ class ReleaseController extends Controller
     protected function updateFiles($version)
     {
         list($return_var, $result) = $this->execCommand(
-            "git init && git stash && git pull origin " . $this->module->releasePrefix . $version
+            "git init && git stash && git fetch --all && git reset --hard " . $this->module->releasePrefix . $version
         );
         return $return_var == 0;
     }
