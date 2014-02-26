@@ -16,13 +16,9 @@ use yii\db\Query;
 use yii\helpers\ArrayHelper;
 
 /**
+ * Class MigrationsController
  *
- * @package  MyCG
- * @author   Георгий
- * @category -
- * @licence  proprietary
- * @link     http://my.cg
- *
+ * @package sitkoru\updater\controllers
  */
 class MigrationsController extends MigrateController
 {

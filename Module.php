@@ -11,7 +11,9 @@
 
 namespace sitkoru\updater;
 
+use sitkoru\updater\components\Console;
 use Yii;
+use yii\console\Exception;
 
 /**
  * Class Module
@@ -70,4 +72,22 @@ EOF;
     ];
 
     public $clearCache = true;
+
+    public function init()
+    {
+        parent::init();
+        if ($this->path == "") {
+            throw new Exception("You should set path to app");
+        }
+        if ($this->versionFilePath == "") {
+            throw new Exception("You should set path to version file");
+        }
+        if ($this->currentVersion == 0.0) {
+            Console::output("Maybe you forget to set current version");
+        }
+        if ($this->assetsCommands == []) {
+            Console::output("Maybe you forget to set assets commands");
+        }
+
+    }
 } 
