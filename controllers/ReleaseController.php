@@ -86,10 +86,17 @@ class ReleaseController extends Controller
      */
     protected function migrateUp($version)
     {
+        Console::output("Migrate up");
         list($return_var, $result) = $this->execCommand(
             "./yii updater/migrations/migrate 0 " . $version . " --interactive=0"
         );
-        return $return_var == 0;
+        if ($return_var == 0) {
+            Console::output("Migrate complete");
+            return true;
+        }
+        Console::output("Error while migrate process");
+        var_dump($result);
+        return false;
     }
 
     /**
@@ -99,10 +106,17 @@ class ReleaseController extends Controller
      */
     protected function migrateDown($version)
     {
+        Console::output("Migrate down");
         list($return_var, $result) = $this->execCommand(
             "./yii updater/migrations/migrateToAppVersion " . $version . " --interactive=0"
         );
-        return $return_var == 0;
+        if ($return_var == 0) {
+            Console::output("Migrate complete");
+            return true;
+        }
+        Console::output("Error while migrate process");
+        var_dump($result);
+        return false;
     }
 
     /**
