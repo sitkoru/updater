@@ -219,6 +219,7 @@ class ReleaseController extends Controller
         );
         if ($return_var == 0) {
             Console::output("Files updated");
+            $this->execCommand("chmod +x yii");
             return true;
         }
         Console::output("Error while updating files");
