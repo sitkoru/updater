@@ -138,12 +138,12 @@ class ReleaseController extends Controller
                 $version = trim($branch, $this->module->releasePrefix);
                 switch ($dir) {
                     case "up":
-                        if ($version > $this->module->currentVersion) {
+                        if ($this->compareVersions($version, $this->module->currentVersion) == 1) {
                             $branches[] = $version;
                         }
                         break;
                     case "down":
-                        if ($version < $this->module->currentVersion) {
+                        if ($this->compareVersions($version, $this->module->currentVersion) == -1) {
                             $branches[] = $version;
                         }
                         break;
@@ -151,6 +151,30 @@ class ReleaseController extends Controller
             }
         }
         return $branches;
+    }
+
+    private function compareVersions($a, $b)
+    {
+        if ($a == $b) {
+            return 0;
+        }
+        $partsA = explode(".", $a);
+        $partsB = explode(".", $b);
+        $more = null;
+        foreach ($partsA as $key => $partA) {
+            if ($more !== null) {
+                continue;
+            }
+            if (isset($partsB[$key])) {
+                if ($partA > $partsB[$key]) {
+                    $more = true;
+                } elseif ($partA < $partsB[$key]) {
+                    $more = false;
+                }
+
+            }
+        }
+        return $more ? 1 : -1;
     }
 
     protected function updateFiles($version)
