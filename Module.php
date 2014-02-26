@@ -18,7 +18,7 @@ use Yii;
  *
  * @package sitkoru\updater
  */
-class Module
+class Module extends \yii\base\Module
 {
     /**
      * @var string Path to app
