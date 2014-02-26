@@ -58,7 +58,7 @@ class MigrationsController extends MigrateController
         $this->appVersion = $version;
         $history = $this->getMigrationHistory(1, $version);
         if ($history) {
-            $mVersion = $history[0]['version'];
+            $mVersion = array_keys($history)[0];
             $this->migrateToVersion($mVersion);
         }
     }
