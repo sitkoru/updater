@@ -71,24 +71,37 @@ class ReleaseController extends Controller
         //$this->execGitCommand("git fetch --all");
         $branches = $this->getBranches();
         $select = Console::select("Choose branch: ", $branches);
-        $branch = $branches[$select];
-        $filesUpdated = $this->updateFiles($branch);
+        $version = $branches[$select];
+        $filesUpdated = $this->updateFiles($version);
         if (!$filesUpdated) {
             return false;
         }
-        $migrated = $this->migrateUp();
+        $migrated = $this->migrateUp($version);
         if (!$migrated) {
             return false;
         }
+        return $version;
+    }
+
+    /**
+     * @param $version
+     *
+     * @return bool
+     */
+    protected function migrateUp($version)
+    {
+        $this->execCommand("./yii updater/migrations/migrate --version=" . $version . " --interactive=0");
         return true;
     }
 
     /**
+     * @param $version
+     *
      * @return bool
      */
-    protected function migrateUp()
+    protected function migrateDown($version)
     {
-        $this->execCommand("./yii migrate --interactive=0");
+        $this->execCommand("./yii updater/migrations/migrateToAppVersion --version=" . $version . " --interactive=0");
         return true;
     }
 
