@@ -3,7 +3,7 @@
     "description": "Updater for Sitko.ru Yii2 projects",
     "keywords": ["sitkoru", "cg2", "yii2"],
     "type": "yii2-extension",
-    "license": "closed",
+    "license": "MIT",
     "support": {
 
     },

@@ -1,13 +1,4 @@
 <?php
-/**
- *
- * PHP version 5
- *
- * Created by PhpStorm.
- * User: Георгий
- * Date: 21.02.14
- * Time: 14:11
- */
 
 namespace sitkoru\updater\controllers;
 
