@@ -57,7 +57,7 @@ class MigrationsController extends MigrateController
     }
 
     /**
-     * @param int  $limit
+     * @param int $limit
      *
      * @param null $version
      *
@@ -80,6 +80,7 @@ class MigrationsController extends MigrateController
             ->queryAll();
         $history = ArrayHelper::map($rows, 'version', 'apply_time');
         unset($history[self::BASE_MIGRATION]);
+
         return $history;
     }
 
@@ -110,11 +111,13 @@ class MigrationsController extends MigrateController
             )->execute();
             $time = microtime(true) - $start;
             echo "*** applied $class (time: " . sprintf("%.3f", $time) . "s)\n\n";
+
             return true;
         } else {
             $time = microtime(true) - $start;
             echo "*** failed to apply $class (time: " . sprintf("%.3f", $time) . "s)\n\n";
+
             return false;
         }
     }
-} 
+}

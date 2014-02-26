@@ -86,4 +86,4 @@ EOF;
         }
         Console::output("Starting process. Current version is " . $this->currentVersion);
     }
-} 
+}

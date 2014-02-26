@@ -24,6 +24,7 @@ class Console extends \yii\helpers\Console
         if (!in_array($input, array_keys($options))) {
             goto top;
         }
+
         return $input;
     }
 }

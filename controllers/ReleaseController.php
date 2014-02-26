@@ -73,6 +73,7 @@ class ReleaseController extends Controller
         $branches = $this->getBranches();
         if (!$branches) {
             Console::output("There is no new releases");
+
             return false;
         }
         $select = Console::select("Choose branch: ", $branches);
@@ -90,6 +91,7 @@ class ReleaseController extends Controller
                 return false;
             }
         }
+
         return $version;
     }
 
@@ -106,10 +108,12 @@ class ReleaseController extends Controller
         );
         if ($return_var == 0) {
             Console::output("Migrate complete");
+
             return true;
         }
         Console::output("Error while migrate process");
         var_dump($result);
+
         return false;
     }
 
@@ -126,10 +130,12 @@ class ReleaseController extends Controller
         );
         if ($return_var == 0) {
             Console::output("Migrate complete");
+
             return true;
         }
         Console::output("Error while migrate process");
         var_dump($result);
+
         return false;
     }
 
@@ -164,6 +170,7 @@ class ReleaseController extends Controller
                 }
             }
         }
+
         return $branches;
     }
 
@@ -212,10 +219,12 @@ class ReleaseController extends Controller
         if ($return_var == 0) {
             Console::output("Files updated");
             $this->execCommand("chmod +x yii");
+
             return true;
         }
         Console::output("Error while updating files");
         var_dump($result);
+
         return false;
     }
 
@@ -230,6 +239,7 @@ class ReleaseController extends Controller
         $return_var = 0;
         $command = "cd " . $this->module->path . " && " . $command;
         exec($command, $result, $return_var);
+
         return [$return_var, $result];
     }
 
@@ -240,6 +250,7 @@ class ReleaseController extends Controller
         $branches = $this->getBranches('down');
         if (!$branches) {
             Console::output("There is no older releases");
+
             return false;
         }
         $select = Console::select("Choose branch: ", $branches);
@@ -258,6 +269,7 @@ class ReleaseController extends Controller
                 return false;
             }
         }
+
         return $version;
     }
 
