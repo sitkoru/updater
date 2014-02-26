@@ -3,7 +3,7 @@ Usage:
 
 Add 
 ```js
-"sitkoru/updater": "dev-master"
+"sitkoru/yii2-updater": "dev-master"
 ```
 to require section of your composer.json
 
