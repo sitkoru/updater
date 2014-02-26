@@ -62,7 +62,7 @@ class ReleaseController extends Controller
      */
     protected function upgrade()
     {
-        //$this->execGitCommand("git fetch --all");
+        $this->execCommand("git fetch");
         $branches = $this->getBranches();
         $select = Console::select("Choose branch: ", $branches);
         $version = $branches[$select];
