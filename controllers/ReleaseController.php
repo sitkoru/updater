@@ -126,7 +126,7 @@ class ReleaseController extends Controller
     {
         Console::output("Migrate down");
         list($return_var, $result) = $this->execCommand(
-            "./yii updater/migrations/toAppVersion " . $version . " --interactive=0"
+            "./yii updater/migrations/to-app-version " . $version . " --interactive=0"
         );
         if ($return_var == 0) {
             Console::output("Migrate complete");
