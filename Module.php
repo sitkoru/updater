@@ -50,10 +50,14 @@ EOF;
     public $assetsCommands = [];
 
     /**
+     * @var array Commands to run something after all file|bd|assets|caches updated. Daemons, for example
+     */
+    public $customCommands = [];
+
+    /**
      * @var array Composer commands to run
      */
     public $composerCommands = [
-        'curl -sS https://getcomposer.org/installer | php',
         'php composer.phar update --no-dev'
     ];
 

@@ -59,6 +59,7 @@ class ReleaseController extends Controller
             $this->saveVersion($version);
             $this->runAssets();
             $this->clearCaches();
+            $this->runCustom();
         }
     }
 
@@ -291,6 +292,15 @@ class ReleaseController extends Controller
         if ($this->module->clearCache) {
             Console::output("Flush cache");
             $this->execCommand("./yii cache/flush");
+        }
+    }
+
+    private function runCustom()
+    {
+        Console::output("Run custom commands");
+        foreach ($this->module->customCommands as $command) {
+            Console::output("Exec " . $command);
+            $this->execCommand($command);
         }
     }
 }
