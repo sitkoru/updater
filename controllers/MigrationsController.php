@@ -51,7 +51,7 @@ class MigrationsController extends MigrateController
         echo "done.\n";
     }
 
-    public function actionUp($version, $limit = 0)
+    public function actionUp($limit = 0, $version = null)
     {
         $this->appVersion = $version;
         parent::actionUp($limit);
