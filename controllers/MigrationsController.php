@@ -59,7 +59,9 @@ class MigrationsController extends MigrateController
         $history = $this->getMigrationHistory(1, $version);
         if ($history) {
             $mVersion = array_keys($history)[0];
-            $this->migrateToVersion($mVersion);
+            if (preg_match('/^m?(\d{6}_\d{6})(_.*?)?$/', $mVersion, $matches)) {
+                $this->migrateToVersion('m' . $matches[1]);
+            }
         }
     }
 
