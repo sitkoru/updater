@@ -84,8 +84,10 @@ class ReleaseController extends Controller
      */
     protected function migrateUp($version)
     {
-        $this->execCommand("./yii updater/migrations/migrate --version=" . $version . " --interactive=0");
-        return true;
+        list($return_var, $result) = $this->execCommand(
+            "./yii updater/migrations/migrate --version=" . $version . " --interactive=0"
+        );
+        return $return_var == 0;
     }
 
     /**
@@ -95,8 +97,10 @@ class ReleaseController extends Controller
      */
     protected function migrateDown($version)
     {
-        $this->execCommand("./yii updater/migrations/migrateToAppVersion --version=" . $version . " --interactive=0");
-        return true;
+        list($return_var, $result) = $this->execCommand(
+            "./yii updater/migrations/migrateToAppVersion --version=" . $version . " --interactive=0"
+        );
+        return $return_var == 0;
     }
 
     /**
@@ -108,7 +112,10 @@ class ReleaseController extends Controller
     {
         $branches = [];
 
-        $result = $this->execCommand("git branch -r --no-color");
+        list($return_var, $result) = $this->execCommand("git branch -r --no-color");
+        if ($return_var != 0) {
+            return false;
+        }
         foreach ($result as $branch) {
             $branch = trim($branch);
             if (stripos($branch, $this->module->releasePrefix) === 0) {
@@ -132,11 +139,10 @@ class ReleaseController extends Controller
 
     protected function updateFiles($version)
     {
-        $result = $this->execCommand(
+        list($return_var, $result) = $this->execCommand(
             "git init && git stash && git pull origin " . $this->module->releasePrefix . $version
         );
-        var_dump($result);
-        return true;
+        return $return_var == 0;
     }
 
     /**
@@ -147,9 +153,10 @@ class ReleaseController extends Controller
     protected function execCommand($command)
     {
         $result = [];
+        $return_var = 0;
         $command = "cd " . $this->module->path . " && " . $command;
-        exec($command, $result);
-        return $result;
+        exec($command, $result, $return_var);
+        return [$return_var, $result];
     }
 
     private function downgrade()
