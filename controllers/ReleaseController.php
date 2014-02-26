@@ -84,6 +84,7 @@ class ReleaseController extends Controller
      */
     protected function migrateUp($version)
     {
+        $this->execCommand("chmod 0777 yii");
         list($return_var, $result) = $this->execCommand(
             "./yii updater/migrations/migrate --version=" . $version . " --interactive=0"
         );
