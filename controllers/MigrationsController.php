@@ -81,7 +81,7 @@ class MigrationsController extends MigrateController
             ->orderBy('version DESC')
             ->limit($limit);
         if ($version) {
-            $query->where(['app-version' => $version]);
+            $query->where(['app_version' => $version]);
         }
         $rows = $query->createCommand($this->db)
             ->queryAll();
