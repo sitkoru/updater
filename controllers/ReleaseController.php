@@ -182,6 +182,7 @@ class ReleaseController extends Controller
                 Console::output($partA . " equal " . $partsB[$key]);
             } else {
                 Console::output($key . " doesn't exist in partsB");
+                $more = true;
             }
         }
         Console::output("Result " . ($more) ? "more" : "less");
