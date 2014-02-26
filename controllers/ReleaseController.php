@@ -226,7 +226,7 @@ class ReleaseController extends Controller
     {
         Console::output("Starting downgrade");
         $this->execCommand("git fetch");
-        $branches = $this->getBranches();
+        $branches = $this->getBranches('down');
         if (!$branches) {
             Console::output("There is no older releases");
             return false;
