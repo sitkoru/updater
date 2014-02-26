@@ -64,6 +64,7 @@ class ReleaseController extends Controller
                 break;
         }
         if ($version) {
+            $this->runComposer();
             $this->saveVersion($version);
             $this->runAssets();
             $this->clearCaches();
@@ -85,14 +86,17 @@ class ReleaseController extends Controller
         $select = Console::select("Choose branch: ", $branches);
         $version = $branches[$select];
         Console::output("Selected version: " . $version);
-        $filesUpdated = $this->updateFiles($version);
-        if (!$filesUpdated) {
-            return false;
-        }
-        $this->runComposer();
-        $migrated = $this->migrateUp($version);
-        if (!$migrated) {
-            return false;
+        for ($i = 0; $i <= $select; $i++) {
+            $tmpVersion = $branches[$i];
+            Console::output("Upgrade to version: " . $tmpVersion);
+            $filesUpdated = $this->updateFiles($tmpVersion);
+            if (!$filesUpdated) {
+                return false;
+            }
+            $migrated = $this->migrateUp($tmpVersion);
+            if (!$migrated) {
+                return false;
+            }
         }
         return $version;
     }
@@ -248,15 +252,19 @@ class ReleaseController extends Controller
         $select = Console::select("Choose branch: ", $branches);
         $version = $branches[$select];
         Console::output("Selected version: " . $version);
-        $migrated = $this->migrateDown($version);
-        if (!$migrated) {
-            return false;
+        $start = count($branches) - 1;
+        for ($i = $start; $i >= $select; $i--) {
+            $tmpVersion = $branches[$i];
+            Console::output("Downgrade to version: " . $tmpVersion);
+            $migrated = $this->migrateDown($version);
+            if (!$migrated) {
+                return false;
+            }
+            $filesUpdated = $this->updateFiles($version);
+            if (!$filesUpdated) {
+                return false;
+            }
         }
-        $filesUpdated = $this->updateFiles($version);
-        if (!$filesUpdated) {
-            return false;
-        }
-        $this->runComposer();
         return $version;
     }
 
