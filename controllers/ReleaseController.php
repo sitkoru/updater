@@ -119,7 +119,7 @@ class ReleaseController extends Controller
         foreach ($result as $branch) {
             $branch = trim($branch);
             if (stripos($branch, $this->module->releasePrefix) === 0) {
-                $version = floatval(trim($branch, $this->module->releasePrefix));
+                $version = trim($branch, $this->module->releasePrefix);
                 switch ($dir) {
                     case "up":
                         if ($version > $this->module->currentVersion) {
