@@ -14,9 +14,9 @@ Enable module in console app config:
         'updater'   => [
             'class'           => \sitkoru\updater\Module::className(), //module class name
             'path'            => dirname(dirname(__DIR__)), //path to app
-            'versionFilePath' => 'version.php', //path to file to store version
-            'currentVersion'  => defined('CG_VERSION') ? CG_VERSION : 0.0, //current version. If empty, updater will try to get it from versionFile
-            'versionConstant' => 'CG_VERSION', //constant name to store version
+            'versionFilePath' => 'version.php', //path to file to store version. Include this file in your app.
+            'currentVersion'  => defined('APP_VERSION') ? APP_VERSION : 0.0, //current version. If empty, updater will try to get it from versionFile
+            'versionConstant' => 'APP_VERSION', //constant name to store version
             'releasePrefix'   => "origin/release-", //prefix to identify release branches in git
             'assetsCommands'  => [ //commands for publish assets
                 "./yii asset/compress app/config/main.assets.php app/config/bundles.php" //for example
