@@ -85,7 +85,7 @@ class ReleaseController extends Controller
     protected function migrateUp($version)
     {
         list($return_var, $result) = $this->execCommand(
-            "./yii updater/migrations/migrate --version=" . $version . " --interactive=0"
+            "./yii updater/migrations/migrate 0 " . $version . " --interactive=0"
         );
         return $return_var == 0;
     }
@@ -98,7 +98,7 @@ class ReleaseController extends Controller
     protected function migrateDown($version)
     {
         list($return_var, $result) = $this->execCommand(
-            "./yii updater/migrations/migrateToAppVersion --version=" . $version . " --interactive=0"
+            "./yii updater/migrations/migrateToAppVersion " . $version . " --interactive=0"
         );
         return $return_var == 0;
     }
