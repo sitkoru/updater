@@ -224,7 +224,26 @@ class ReleaseController extends Controller
 
     private function downgrade()
     {
-        return false;
+        Console::output("Starting downgrade");
+        $this->execCommand("git fetch");
+        $branches = $this->getBranches();
+        if (!$branches) {
+            Console::output("There is no older releases");
+            return false;
+        }
+        $select = Console::select("Choose branch: ", $branches);
+        $version = $branches[$select];
+        Console::output("Selected version: " . $version);
+        $migrated = $this->migrateDown($version);
+        if (!$migrated) {
+            return false;
+        }
+        $filesUpdated = $this->updateFiles($version);
+        if (!$filesUpdated) {
+            return false;
+        }
+        $this->runComposer();
+        return $version;
     }
 
     private function saveVersion($version)
