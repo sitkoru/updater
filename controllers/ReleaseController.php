@@ -273,7 +273,7 @@ class ReleaseController extends Controller
         Console::output("Run assets commands");
         foreach ($this->module->assetsCommands as $command) {
             Console::output("Exec " . $command);
-            $this->execCommand($command);
+            $this->execCommand($command . " >> /dev/null");
         }
     }
 
