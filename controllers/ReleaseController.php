@@ -147,7 +147,7 @@ class ReleaseController extends Controller
     protected function execCommand($command)
     {
         $result = [];
-        $command = str_ireplace("./", $this->module->path . "/", $command);
+        $command = "cd " . $this->module->path . " && " . $command;
         exec($command, $result);
         return $result;
     }
