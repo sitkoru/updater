@@ -155,25 +155,36 @@ class ReleaseController extends Controller
 
     private function compareVersions($a, $b)
     {
+        Console::output("Compare " . $a . " & " . $b);
         if ($a == $b) {
+            var_dump("Equal!");
             return 0;
         }
         $partsA = explode(".", $a);
+        var_dump($partsA);
         $partsB = explode(".", $b);
         $more = null;
+        var_dump($partsB);
         foreach ($partsA as $key => $partA) {
+            Console::output("Process " . $partA);
             if ($more !== null) {
+                Console::output("Already found");
                 continue;
             }
             if (isset($partsB[$key])) {
                 if ($partA > $partsB[$key]) {
+                    Console::output($partA . " more than " . $partsB[$key]);
                     $more = true;
                 } elseif ($partA < $partsB[$key]) {
+                    Console::output($partA . " less than " . $partsB[$key]);
                     $more = false;
                 }
-
+                Console::output($partA . " equal " . $partsB[$key]);
+            } else {
+                Console::output($key . " doesn't exist in partsB");
             }
         }
+        Console::output("Result " . ($more) ? "more" : "less");
         return $more ? 1 : -1;
     }
 
