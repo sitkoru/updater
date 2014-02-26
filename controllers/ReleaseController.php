@@ -51,7 +51,6 @@ class ReleaseController extends Controller
         }
         if ($version) {
             $this->saveVersion($version);
-            $this->runComposer();
             $this->runAssets();
             $this->clearCaches();
         }
@@ -70,6 +69,7 @@ class ReleaseController extends Controller
         if (!$filesUpdated) {
             return false;
         }
+        $this->runComposer();
         $migrated = $this->migrateUp($version);
         if (!$migrated) {
             return false;
@@ -84,7 +84,6 @@ class ReleaseController extends Controller
      */
     protected function migrateUp($version)
     {
-        $this->execCommand("chmod 0777 yii");
         list($return_var, $result) = $this->execCommand(
             "./yii updater/migrations/migrate --version=" . $version . " --interactive=0"
         );
