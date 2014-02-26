@@ -30,13 +30,8 @@ class ReleaseController extends Controller
      */
     public $module;
 
-    private $env;
-
     public function actionUpdate()
     {
-
-        $this->env = Console::select("Choose environment: ", $this->module->environments);
-
         //ask for mode
         $modes = [
             self::MODE_UPGRADE   => 'Upgrade',
@@ -57,7 +52,6 @@ class ReleaseController extends Controller
         if ($version) {
             $this->saveVersion($version);
             $this->runComposer();
-            $this->runInit($this->env);
             $this->runAssets();
             $this->clearCaches();
         }
@@ -168,11 +162,6 @@ class ReleaseController extends Controller
         $php = str_ireplace("%constant%", $this->module->versionConstant, $this->module->versionFileTemplate);
         $php = str_ireplace("%version%", $version, $php);
         file_put_contents($this->module->versionFilePath, $php);
-    }
-
-    private function runInit($env)
-    {
-        $this->execCommand("./init " . $env);
     }
 
     private function runAssets()

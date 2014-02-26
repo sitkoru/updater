@@ -54,11 +54,6 @@ EOF;
     public $releasePrefix = "origin/release-";
 
     /**
-     * @var array Environments to init
-     */
-    public $environments = ['development', 'production'];
-
-    /**
      * @var array Commands to compile assets
      */
     public $assetsCommands = [];
