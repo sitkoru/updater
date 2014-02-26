@@ -64,6 +64,10 @@ class ReleaseController extends Controller
         Console::output("Starting upgrade");
         $this->execCommand("git fetch");
         $branches = $this->getBranches();
+        if (!$branches) {
+            Console::output("There is no new releases");
+            return false;
+        }
         $select = Console::select("Choose branch: ", $branches);
         $version = $branches[$select];
         Console::output("Selected version: " . $version);
@@ -238,8 +242,6 @@ class ReleaseController extends Controller
             Console::output("Exec " . $command);
             $this->execCommand($command);
         }
-        //$this->execCommand("lessc cgweb/web/less/cg_all.less cgweb/web/css/cg_all.css");
-        //$this->execCommand("./yii asset/compress cgweb/config/main.assets.php cgweb/config/bundles.php");
     }
 
     private function runComposer()
@@ -249,8 +251,6 @@ class ReleaseController extends Controller
             Console::output("Exec " . $command);
             $this->execCommand($command);
         }
-        //$this->execCommand("curl -sS https://getcomposer.org/installer | php");
-        //$this->execCommand("php composer.phar update --no-dev");
     }
 
     private function clearCaches()
