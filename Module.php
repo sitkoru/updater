@@ -52,7 +52,12 @@ EOF;
     /**
      * @var array Commands to run something after all file|bd|assets|caches updated. Daemons, for example
      */
-    public $customCommands = [];
+    public $afterCommands = [];
+
+    /**
+     * @var array Commands to run something before process started. Stop daemons, for example
+     */
+    public $beforeCommands = [];
 
     /**
      * @var array Composer commands to run

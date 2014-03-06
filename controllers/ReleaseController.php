@@ -45,6 +45,11 @@ class ReleaseController extends Controller
 
     protected function process($mode = null)
     {
+        if (!$this->checkLock()) {
+            return false;
+        }
+        $this->createLock();
+        $this->runBefore();
         $version = false;
         switch ($mode) {
             case self::MODE_UPGRADE:
@@ -59,8 +64,10 @@ class ReleaseController extends Controller
             $this->saveVersion($version);
             $this->runAssets();
             $this->clearCaches();
-            $this->runCustom();
         }
+        $this->runAfter();
+        $this->deleteLock();
+        return true;
     }
 
     /**
@@ -307,10 +314,38 @@ class ReleaseController extends Controller
         }
     }
 
-    private function runCustom()
+    private function runAfter()
     {
-        Console::output("Run custom commands");
-        foreach ($this->module->customCommands as $command) {
+        Console::output("Run after-update commands");
+        foreach ($this->module->afterCommands as $command) {
+            Console::output("Exec " . $command);
+            $this->execCommand($command);
+        }
+    }
+
+    private function createLock()
+    {
+        file_put_contents($this->module->path . "/updater.lock", "1");
+    }
+
+    private function deleteLock()
+    {
+        unlink($this->module->path . "/updater.lock");
+    }
+
+    private function checkLock()
+    {
+        if (file_exists($this->module->path . "/updater.lock")) {
+            Console::output("Update already in progress. File update.lock exists in your path");
+            return false;
+        }
+        return true;
+    }
+
+    private function runBefore()
+    {
+        Console::output("Run before-update commands");
+        foreach ($this->module->beforeCommands as $command) {
             Console::output("Exec " . $command);
             $this->execCommand($command);
         }
