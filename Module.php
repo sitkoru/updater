@@ -65,4 +65,6 @@ EOF;
     ];
 
     public $clearCache = true;
+
+    public $defaultRoute = "release/index";
 }
