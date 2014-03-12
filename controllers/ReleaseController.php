@@ -3,6 +3,7 @@
 namespace sitkoru\updater\controllers;
 
 use sitkoru\updater\components\Console;
+use yii\base\Exception;
 use yii\console\Controller;
 
 /**
@@ -20,6 +21,32 @@ class ReleaseController extends Controller
      * @var \sitkoru\updater\Module
      */
     public $module;
+
+    public function init()
+    {
+        parent::init();
+
+        if ($this->module->path == "") {
+            throw new Exception("You should set path to app");
+        }
+        if ($this->module->versionFilePath == "") {
+            throw new Exception("You should set path to version file");
+        }
+        if ($this->module->currentVersion == 0.0) {
+            Console::output("Maybe you forget to set current version. Trying to get from version file");
+            if (file_exists($this->module->versionFilePath)) {
+                require_once($this->module->versionFilePath);
+                if (defined($this->module->versionConstant)) {
+                    $this->module->currentVersion = constant($this->module->versionConstant);
+                }
+            }
+        }
+        if ($this->module->assetsCommands == []) {
+            Console::output("Maybe you forget to set assets commands");
+        }
+        Console::output("Starting process. Current version is " . $this->module->currentVersion);
+    }
+
 
     public function actionIndex()
     {
