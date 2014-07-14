@@ -406,8 +406,16 @@ class ReleaseController extends Controller
                             $this->finalize();
                             return false;
                         } else {
-                            while ($stopper->check() !== true) {
-                                sleep(5);
+                            while (true) {
+                                $canProcess = $stopper->check();
+                                if ($canProcess !== true) {
+                                    Console::output(
+                                        "Still waiting: " . $canProcess['message'] . ". Sleep for 5 seconds"
+                                    );
+                                    sleep(5);
+                                } else {
+                                    break;
+                                }
                             }
                         }
                     }
