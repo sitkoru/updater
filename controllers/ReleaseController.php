@@ -3,6 +3,7 @@
 namespace sitkoru\updater\controllers;
 
 use sitkoru\updater\components\Console;
+use sitkoru\updater\components\UpdateStopper;
 use yii\base\Exception;
 use yii\console\Controller;
 
@@ -16,6 +17,9 @@ class ReleaseController extends Controller
 {
     const MODE_UPGRADE = 1;
     const MODE_DOWNGRADE = 2;
+
+    const PREVENT_WAIT = 1;
+    const PREVENT_CANCEL = 2;
 
     /**
      * @var \sitkoru\updater\Module
@@ -76,26 +80,28 @@ class ReleaseController extends Controller
             return false;
         }
         $this->createLock();
-        $this->runBefore();
-        $version = false;
-        switch ($mode) {
-            case self::MODE_UPGRADE:
-                $version = $this->upgrade();
-                break;
-            case self::MODE_DOWNGRADE:
-                $version = $this->downgrade();
-                break;
+        if ($this->checkAppPreventUpdate()) {
+            $this->runBefore();
+            $version = false;
+            switch ($mode) {
+                case self::MODE_UPGRADE:
+                    $version = $this->upgrade();
+                    break;
+                case self::MODE_DOWNGRADE:
+                    $version = $this->downgrade();
+                    break;
+            }
+            if ($version) {
+                $this->runComposer();
+                $this->saveVersion($version);
+                $this->runAssets();
+                $this->clearCaches();
+            }
+            $this->finalize();
         }
-        if ($version) {
-            $this->runComposer();
-            $this->saveVersion($version);
-            $this->runAssets();
-            $this->clearCaches();
-        }
-        $this->runAfter();
-        $this->deleteLock();
         return true;
     }
+
 
     /**
      * @return bool
@@ -376,5 +382,44 @@ class ReleaseController extends Controller
             Console::output("Exec " . $command);
             $this->execCommand($command);
         }
+    }
+
+    private function checkAppPreventUpdate()
+    {
+        if (count($this->module->appUpdateStoppers)) {
+            foreach ($this->module->appUpdateStoppers as $stopperClass) {
+                $stopper = new $stopperClass();
+                if ($stopper instanceof UpdateStopper) {
+                    $canProcess = $stopper->check();
+                    if ($canProcess !== true) {
+                        Console::output(
+                            $stopperClass . " prevent update process with message '" . $canProcess['message'] . "'"
+                        );
+                        $answer = Console::select(
+                            "What should we do?",
+                            [
+                                self::PREVENT_WAIT   => 'Wait. Updater would ask for permission every 5 sec and proceed after positive answer',
+                                self::PREVENT_CANCEL => 'Cancel update',
+                            ]
+                        );
+                        if ($answer == self::PREVENT_CANCEL) {
+                            $this->finalize();
+                            return false;
+                        } else {
+                            while ($stopper->check() !== true) {
+                                sleep(5);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private function finalize()
+    {
+        $this->runAfter();
+        $this->deleteLock();
     }
 }

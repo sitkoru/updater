@@ -67,4 +67,9 @@ EOF;
     public $clearCache = true;
 
     public $defaultRoute = "release/index";
+
+    /**
+     * @var array Classes with static method check(), that can stop or pause update process
+     */
+    public $appUpdateStoppers = [];
 }
