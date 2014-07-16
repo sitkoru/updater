@@ -403,7 +403,7 @@ class ReleaseController extends Controller
                             ]
                         );
                         if ($answer == self::PREVENT_CANCEL) {
-                            $this->finalize();
+                            $this->deleteLock();
                             return false;
                         } else {
                             while (true) {
