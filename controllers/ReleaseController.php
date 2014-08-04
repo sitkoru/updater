@@ -26,6 +26,8 @@ class ReleaseController extends Controller
      */
     public $module;
 
+    private $afterCommands = [];
+
     public function init()
     {
         parent::init();
@@ -354,6 +356,15 @@ class ReleaseController extends Controller
             Console::output("Exec " . $command);
             $this->execCommand($command);
         }
+        foreach ($this->afterCommands as $command) {
+            Console::output("Exec " . $command);
+            $this->execCommand($command);
+        }
+    }
+
+    private function registerAfterCommand($key, $command)
+    {
+        $this->afterCommands[$key] = $command;
     }
 
     private function createLock()
@@ -378,9 +389,31 @@ class ReleaseController extends Controller
     private function runBefore()
     {
         Console::output("Run before-update commands");
-        foreach ($this->module->beforeCommands as $command) {
-            Console::output("Exec " . $command);
-            $this->execCommand($command);
+        foreach ($this->module->beforeCommands as $key => $command) {
+            if (is_array($command)) {
+                $answer = Console::select($key, ['0' => 'No', '1' => 'Yes']);
+                if (!isset($command[$answer])) {
+                    continue;
+                } else {
+                    if (is_array($command[$answer])) {
+                        if (!isset($command[$answer]['before'])) {
+                            continue;
+                        } else {
+                            Console::output("Exec " . $command[$answer]['before']);
+                            $this->execCommand($command[$answer]['before']);
+                            if (isset($command[$answer]['after'])) {
+                                $this->registerAfterCommand($key, $command[$answer]['after']);
+                            }
+                        }
+                    } else {
+                        Console::output("Exec " . $command[$answer]);
+                        $this->execCommand($command[$answer]);
+                    }
+                }
+            } else {
+                Console::output("Exec " . $command);
+                $this->execCommand($command);
+            }
         }
     }
 
