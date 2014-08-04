@@ -392,7 +392,7 @@ class ReleaseController extends Controller
         foreach ($this->module->beforeCommands as $key => $command) {
             if (is_array($command)) {
                 $answer = Console::select($key, ['0' => 'No', '1' => 'Yes']);
-                if (!isset($command[$answer])) {
+                if (!isset($command[$answer]) || $command[$answer] == false) {
                     continue;
                 } else {
                     if (is_array($command[$answer])) {
