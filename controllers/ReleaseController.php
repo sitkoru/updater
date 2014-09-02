@@ -345,7 +345,7 @@ class ReleaseController extends Controller
     {
         if ($this->module->clearCache) {
             Console::output("Flush cache");
-            $this->execCommand("./yii cache/flush");
+            $this->execCommand("./yii cache/flush cache --interactive=0");
         }
     }
 
