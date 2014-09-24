@@ -61,7 +61,7 @@ EOF;
      * @var array Composer commands to run
      */
     public $composerCommands = [
-        'php composer.phar update --no-dev --prefer-dist'
+        'php composer.phar update --no-dev --prefer-dist -o'
     ];
 
     public $clearCache = true;
