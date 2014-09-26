@@ -61,6 +61,7 @@ EOF;
      * @var array Composer commands to run
      */
     public $composerCommands = [
+        'php composer.phar global update --no-dev --prefer-dist',
         'php composer.phar update --no-dev --prefer-dist -o'
     ];
 
