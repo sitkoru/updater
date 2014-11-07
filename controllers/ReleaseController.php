@@ -94,7 +94,6 @@ class ReleaseController extends Controller
                     break;
             }
             if ($version) {
-                $this->runComposer();
                 $this->saveVersion($version);
                 $this->runAssets();
                 $this->clearCaches();
@@ -261,7 +260,7 @@ class ReleaseController extends Controller
         if ($return_var == 0) {
             Console::output("Files updated");
             $this->execCommand("chmod +x yii");
-
+            $this->runComposer();
             return true;
         }
         Console::output("Error while updating files");
