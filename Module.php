@@ -67,6 +67,10 @@ EOF;
 
     public $clearCache = true;
 
+    public $cacheCommands = [
+        './yii cache/flush cache --interactive=0'
+    ];
+
     public $defaultRoute = "release/index";
 
     /**
