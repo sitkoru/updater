@@ -100,6 +100,7 @@ class ReleaseController extends Controller
             }
             $this->finalize();
         }
+
         return true;
     }
 
@@ -222,9 +223,9 @@ class ReleaseController extends Controller
             //var_dump("Equal!");
             return 0;
         }
-        $partsA = explode(".", $a);
+        $partsA = explode('.', $a);
         //var_dump($partsA);
-        $partsB = explode(".", $b);
+        $partsB = explode('.', $b);
         $more = null;
         //var_dump($partsB);
         foreach ($partsA as $key => $partA) {
@@ -233,11 +234,11 @@ class ReleaseController extends Controller
                 //Console::output("Already found");
                 continue;
             }
-            if (isset($partsB[$key])) {
-                if ($partA > $partsB[$key]) {
+            if (array_key_exists($key, $partsB)) {
+                if ((int)$partA > (int)$partsB[$key]) {
                     //Console::output($partA . " more than " . $partsB[$key]);
                     $more = true;
-                } elseif ($partA < $partsB[$key]) {
+                } elseif ((int)$partA < (int)$partsB[$key]) {
                     //Console::output($partA . " less than " . $partsB[$key]);
                     $more = false;
                 }
@@ -247,6 +248,7 @@ class ReleaseController extends Controller
                 $more = true;
             }
         }
+
         //Console::output("Result " . ($more) ? "more" : "less");
         return $more ? 1 : -1;
     }
@@ -261,6 +263,7 @@ class ReleaseController extends Controller
             Console::output("Files updated");
             $this->execCommand("chmod +x yii");
             $this->runComposer();
+
             return true;
         }
         Console::output("Error while updating files");
@@ -383,8 +386,10 @@ class ReleaseController extends Controller
     {
         if (file_exists($this->module->path . "/updater.lock")) {
             Console::output("Update already in progress. File update.lock exists in your path");
+
             return false;
         }
+
         return true;
     }
 
@@ -439,6 +444,7 @@ class ReleaseController extends Controller
                         );
                         if ($answer == self::PREVENT_CANCEL) {
                             $this->deleteLock();
+
                             return false;
                         } else {
                             while (true) {
@@ -457,6 +463,7 @@ class ReleaseController extends Controller
                 }
             }
         }
+
         return true;
     }
 
