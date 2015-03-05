@@ -12,9 +12,19 @@ use Yii;
 class Module extends \yii\base\Module
 {
     /**
-     * @var string Path to app
+     * @var string Current path to app
      */
     public $path;
+
+    /**
+     * @var string Path to releases root dir
+     */
+    public $releasesDir;
+
+    /**
+     * @var string Git url for checkout
+     */
+    public $gitUrl;
 
     /**
      * @var float Current version number
@@ -23,7 +33,7 @@ class Module extends \yii\base\Module
     /**
      * @var string Path to version file
      */
-    public $versionFilePath = "";
+    public $versionFilePath = '';
     /**
      * @var string Version file template
      */
@@ -35,46 +45,50 @@ EOF;
     /**
      * @var string Name of version constant to use in APP
      */
-    public $versionConstant = "APP_VERSION";
+    public $versionConstant = 'APP_VERSION';
 
     /**
      * @var string Prefix to filter git branches
      */
-    public $releasePrefix = "origin/release-";
+    public $releasePrefix = 'origin/release-';
 
     /**
-     * @var array Commands to compile assets
+     * @var array Update process steps
      */
-    public $assetsCommands = [];
-
-    /**
-     * @var array Commands to run something after all file|bd|assets|caches updated. Daemons, for example
-     */
-    public $afterCommands = [];
-
-    /**
-     * @var array Commands to run something before process started. Stop daemons, for example
-     */
-    public $beforeCommands = [];
-
-    /**
-     * @var array Composer commands to run
-     */
-    public $composerCommands = [
-        'php composer.phar global update --no-dev --prefer-dist',
-        'php composer.phar update --no-dev --prefer-dist -o'
+    public $steps = [
+        'before'   => [],
+        'composer' => [
+            'php composer.phar update --prefer-dist --no-dev'
+        ],
+        'cache'    => ['./yii cache/flush-all'],
+        'after'    => []
     ];
+
+    public $scenarios = [
+        'default' => [
+            'before',
+            'git',
+            'composer',
+            'migrations',
+            'after'
+        ]
+    ];
+
+    public $nginx = [];
 
     public $clearCache = true;
 
-    public $cacheCommands = [
-        './yii cache/flush cache --interactive=0'
-    ];
-
-    public $defaultRoute = "release/index";
+    public $defaultRoute = 'release/index';
 
     /**
      * @var array Classes with static method check(), that can stop or pause update process
      */
     public $appUpdateStoppers = [];
+
+    public $systemSteps = [
+        'files',
+        'migrations',
+        'composerCopy',
+        'nginx'
+    ];
 }

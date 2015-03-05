@@ -26,20 +26,20 @@ class ReleaseController extends Controller
      */
     public $module;
 
+    private $scenario = [];
+
     private $afterCommands = [];
+    private $newVersion;
 
     public function init()
     {
         parent::init();
 
-        if ($this->module->path == "") {
-            throw new Exception("You should set path to app");
+        if ($this->module->versionFilePath === '') {
+            throw new Exception('You should set path to version file');
         }
-        if ($this->module->versionFilePath == "") {
-            throw new Exception("You should set path to version file");
-        }
-        if ($this->module->currentVersion == 0.0) {
-            Console::output("Maybe you forget to set current version. Trying to get from version file");
+        if ($this->module->currentVersion === 0.0) {
+            Console::output('Maybe you forget to set current version. Trying to get from version file');
             if (file_exists($this->module->versionFilePath)) {
                 require_once($this->module->versionFilePath);
                 if (defined($this->module->versionConstant)) {
@@ -47,22 +47,33 @@ class ReleaseController extends Controller
                 }
             }
         }
-        if ($this->module->assetsCommands == []) {
-            Console::output("Maybe you forget to set assets commands");
+        if (!$this->module->steps) {
+            throw new Exception('You should define steps');
         }
-        Console::output("Starting process. Current version is " . $this->module->currentVersion);
+        if (!$this->module->scenarios) {
+            throw new Exception('You should define scenarios');
+        }
+        Console::output('Starting process. Current version is ' . $this->module->currentVersion);
     }
 
 
     public function actionIndex()
     {
+        if (count($this->module->scenarios) > 1) {
+
+            $scenarios = array_keys($this->module->scenarios);
+            $scenario = Console::select('Choose scenario: ', $scenarios);
+            $this->scenario = $this->module->scenarios[$scenarios[$scenario]];
+        } else {
+            $this->scenario = reset($this->module->scenarios);
+        }
         //ask for mode
         $modes = [
             self::MODE_UPGRADE   => 'Upgrade',
             self::MODE_DOWNGRADE => 'Downgrade'
         ];
 
-        $mode = Console::select("Choose mode: ", $modes);
+        $mode = (int)Console::select('Choose mode: ', $modes);
         $this->process($mode);
     }
 
@@ -76,6 +87,88 @@ class ReleaseController extends Controller
         $this->process(self::MODE_DOWNGRADE);
     }
 
+    private function getSteps($mode)
+    {
+        $steps = [];
+        foreach ($this->scenario as $scenarioStep) {
+            $stepNames = [];
+            if (is_array($scenarioStep)) {
+                if (array_key_exists('upgrade', $scenarioStep) && $mode === self::MODE_UPGRADE) {
+                    $stepNames = $scenarioStep['upgrade'];
+                }
+                if (array_key_exists('downgrade', $scenarioStep) && $mode === self::MODE_DOWNGRADE) {
+                    $stepNames = $scenarioStep['downgrade'];
+                }
+            } else {
+                $stepNames = (array)$scenarioStep;
+            }
+            foreach ($stepNames as $stepName) {
+                if (array_key_exists($stepName, $this->module->steps)) {
+                    $steps[] = $this->module->steps[$stepName];
+                } elseif (in_array($stepName, $this->module->systemSteps, true)) {
+                    $steps[] = $stepName;
+                } else {
+                    $this->deleteLock();
+                    throw new Exception('Unknown step: ' . $stepName);
+                }
+            }
+        }
+
+        return $steps;
+    }
+
+    private function runSystemCommand($commandName, $mode)
+    {
+        switch ($commandName) {
+            case 'files':
+                return $this->runFiles();
+                break;
+            case 'migrations':
+                $this->runMigrations($mode);
+                break;
+            case 'nginx':
+                return $this->runNginx();
+                break;
+        }
+
+        return false;
+    }
+
+    private function runFiles()
+    {
+        $path = $this->module->releasesDir . DIRECTORY_SEPARATOR . $this->newVersion;
+        if (!is_dir($path)) {
+            mkdir($path);
+        } else {
+            array_map('unlink', glob($path . '/*'));
+        }
+        $filesUpdated = $this->updateFiles($this->newVersion, $path);
+        var_dump($filesUpdated);
+        $this->deleteLock();
+        die();
+        if (!$filesUpdated) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function runMigrations($mode)
+    {
+        $migrated = false;
+        switch ($mode) {
+            case self::MODE_UPGRADE:
+                $migrated = $this->migrateUp($this->newVersion);
+                break;
+            case self::MODE_DOWNGRADE:
+                $migrated = $this->migrateDown($this->newVersion);
+                break;
+        }
+
+        return $migrated;
+    }
+
+
     protected function process($mode = null)
     {
         if (!$this->checkLock()) {
@@ -83,22 +176,50 @@ class ReleaseController extends Controller
         }
         $this->createLock();
         if ($this->checkAppPreventUpdate()) {
-            $this->runBefore();
-            $version = false;
-            switch ($mode) {
-                case self::MODE_UPGRADE:
-                    $version = $this->upgrade();
-                    break;
-                case self::MODE_DOWNGRADE:
-                    $version = $this->downgrade();
-                    break;
+
+
+            Console::output('Starting upgrade');
+            /*$this->execCommand('git fetch');
+            $branches = $this->getBranches($mode);
+            if (!$branches) {
+                Console::output('There is no new releases');
+
+                return false;
+            }*/
+            $branches = ['0.0.3', '0.0.4', '0.0.5'];
+            $select = Console::select('Choose branch: ', $branches);
+            $version = $branches[$select];
+            Console::output('Selected version: ' . $version);
+            $this->newVersion = $version;
+            Console::output(($mode === self::MODE_DOWNGRADE ? 'Downgrade' : 'Upgrade') . ' to version: ' . $this->newVersion);
+
+            $steps = $this->getSteps($mode);
+            var_dump($steps);
+            foreach ($steps as $stepName => $commands) {
+                if (is_string($commands) && in_array($commands, $this->module->systemSteps, true)) {
+                    Console::output('Run step : ' . $commands);
+                    $this->runSystemCommand($commands, $mode);
+                } else {
+                    Console::output('Run step : ' . $stepName);
+                    $this->runUserCommands($stepName, $commands);
+                }
             }
-            if ($version) {
-                $this->saveVersion($version);
-                $this->runAssets();
-                $this->clearCaches();
-            }
-            $this->finalize();
+            /* $this->runBefore();
+             $version = false;
+             switch ($mode) {
+                 case self::MODE_UPGRADE:
+                     $version = $this->upgrade();
+                     break;
+                 case self::MODE_DOWNGRADE:
+                     $version = $this->downgrade();
+                     break;
+             }
+             if ($version) {
+                 $this->saveVersion($version);
+                 $this->runAssets();
+                 $this->clearCaches();
+             }
+             $this->finalize();*/
         }
 
         return true;
@@ -110,7 +231,7 @@ class ReleaseController extends Controller
      */
     protected function upgrade()
     {
-        Console::output("Starting upgrade");
+        Console::output('Starting upgrade');
         $this->execCommand("git fetch");
         $branches = $this->getBranches();
         if (!$branches) {
@@ -182,30 +303,30 @@ class ReleaseController extends Controller
     }
 
     /**
-     * @param string $dir
+     * @param integer $mode
      *
      * @return array
      */
-    protected function getBranches($dir = "up")
+    protected function getBranches($mode)
     {
         $branches = [];
 
-        list($return_var, $result) = $this->execCommand("git branch -r --no-color");
-        if ($return_var != 0) {
+        list($return_var, $result) = $this->execCommand('git branch -r --no-color');
+        if ($return_var !== 0) {
             return false;
         }
         foreach ($result as $branch) {
             $branch = trim($branch);
             if (stripos($branch, $this->module->releasePrefix) === 0) {
                 $version = trim($branch, $this->module->releasePrefix);
-                switch ($dir) {
-                    case "up":
-                        if ($this->compareVersions($version, $this->module->currentVersion) == 1) {
+                switch ($mode) {
+                    case self::MODE_UPGRADE:
+                        if ($this->compareVersions($version, $this->module->currentVersion) === 1) {
                             $branches[] = $version;
                         }
                         break;
-                    case "down":
-                        if ($this->compareVersions($version, $this->module->currentVersion) == -1) {
+                    case self::MODE_DOWNGRADE:
+                        if ($this->compareVersions($version, $this->module->currentVersion) === -1) {
                             $branches[] = $version;
                         }
                         break;
@@ -219,7 +340,7 @@ class ReleaseController extends Controller
     private function compareVersions($a, $b)
     {
         //Console::output("Compare " . $a . " & " . $b);
-        if ($a == $b) {
+        if ($a === $b) {
             //var_dump("Equal!");
             return 0;
         }
@@ -253,20 +374,20 @@ class ReleaseController extends Controller
         return $more ? 1 : -1;
     }
 
-    protected function updateFiles($version)
+    protected function updateFiles($version, $path)
     {
-        Console::output("Process Git");
-        list($return_var, $result) = $this->execCommand(
-            "git init && git stash && git fetch --all && git reset --hard " . $this->module->releasePrefix . $version
-        );
-        if ($return_var == 0) {
-            Console::output("Files updated");
-            $this->execCommand("chmod +x yii");
+        Console::output('Process Git');
+        $command = 'git clone ' . $this->module->gitUrl . ' --branch ' . $this->module->releasePrefix . $version . ' --single-branch ' . $path;
+        Console::output('Run ' . $command);
+        list($return_var, $result) = $this->execCommand($command);
+        if ($return_var === 0) {
+            Console::output('Files updated');
+            $this->execCommand('chmod +x ' . $path . DIRECTORY_SEPARATOR . 'yii');
             $this->runComposer();
 
             return true;
         }
-        Console::output("Error while updating files");
+        Console::output('Error while updating files');
         var_dump($result);
 
         return false;
@@ -471,5 +592,9 @@ class ReleaseController extends Controller
     {
         $this->runAfter();
         $this->deleteLock();
+    }
+
+    private function runUserCommands($stepName, $commands)
+    {
     }
 }
