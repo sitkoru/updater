@@ -33,6 +33,9 @@ class ReleaseController extends Controller
 
     public function init()
     {
+        var_dump(\Yii::$aliases);
+        die('456');
+
         parent::init();
 
         if ($this->module->versionFilePath === '') {
@@ -377,7 +380,7 @@ class ReleaseController extends Controller
     protected function updateFiles($version, $path)
     {
         Console::output('Process Git');
-        $command = 'git clone ' . $this->module->gitUrl . ' --branch ' . $this->module->releasePrefix . $version . ' --single-branch ' . $path;
+        $command = 'git clone ' . $this->module->gitUrl . ' --branch ' . $this->module->releasePrefix . $version . ' --single-branch --depth=1 ' . $path;
         Console::output('Run ' . $command);
         list($return_var, $result) = $this->execCommand($command);
         if ($return_var === 0) {
