@@ -27,6 +27,11 @@ class Module extends \yii\base\Module
     public $gitUrl;
 
     /**
+     * @var string App environment to init
+     */
+    public $environment;
+
+    /**
      * @var float Current version number
      */
     public $currentVersion = 0.0;

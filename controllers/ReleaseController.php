@@ -30,12 +30,11 @@ class ReleaseController extends Controller
 
     private $afterCommands = [];
     private $newVersion;
+    private $branch;
+    private $releasePath;
 
     public function init()
     {
-        var_dump(\Yii::$aliases);
-        die('456');
-
         parent::init();
 
         if ($this->module->versionFilePath === '') {
@@ -59,9 +58,22 @@ class ReleaseController extends Controller
         Console::output('Starting process. Current version is ' . $this->module->currentVersion);
     }
 
-
-    public function actionIndex()
+    private function setNewVersion($version, $withPrefix = true)
     {
+        $this->newVersion = $version;
+        if ($withPrefix) {
+            $prefix = str_ireplace('origin/', '', $this->module->releasePrefix);
+            $this->branch = $prefix . $this->newVersion;
+        } else {
+            $this->branch = $version;
+        }
+    }
+
+    public function actionIndex($branch = null)
+    {
+        if ($branch) {
+            $this->setNewVersion($branch, false);
+        }
         if (count($this->module->scenarios) > 1) {
 
             $scenarios = array_keys($this->module->scenarios);
@@ -137,23 +149,44 @@ class ReleaseController extends Controller
         return false;
     }
 
-    private function runFiles()
+    private function runNginx()
     {
-        $path = $this->module->releasesDir . DIRECTORY_SEPARATOR . $this->newVersion;
-        if (!is_dir($path)) {
-            mkdir($path);
-        } else {
-            array_map('unlink', glob($path . '/*'));
-        }
-        $filesUpdated = $this->updateFiles($this->newVersion, $path);
-        var_dump($filesUpdated);
-        $this->deleteLock();
-        die();
-        if (!$filesUpdated) {
-            return false;
+        foreach ($this->module->nginx as $file => $string) {
+            if (file_exists($file)) {
+                file_put_contents($file, str_ireplace('%release_dir%', $this->releasePath, $string));
+            } else {
+                Console::output('File ' . $file . ' doens\'t exists. Skip');
+            }
         }
 
         return true;
+    }
+
+    private function runFiles()
+    {
+        $this->releasePath = $this->module->releasesDir . DIRECTORY_SEPARATOR . $this->newVersion;
+
+        if (!is_dir($this->releasePath)) {
+            mkdir($this->releasePath);
+        } else {
+            $this->execCommand('ls -a | xargs rm -rf', $this->releasePath);
+            //array_map('unlink', glob($path . '/*'));
+        }
+        $filesUpdated = $this->updateFiles();
+        if (!$filesUpdated) {
+            return false;
+        }
+        if ($this->module->environment) {
+            $this->runEnvironment($this->module->environment);
+        }
+
+
+        return true;
+    }
+
+    private function runEnvironment($environment)
+    {
+        $this->execCommand('./init --env=' . $environment . ' --overwrite=n', $this->releasePath);
     }
 
     private function runMigrations($mode)
@@ -182,22 +215,24 @@ class ReleaseController extends Controller
 
 
             Console::output('Starting upgrade');
-            /*$this->execCommand('git fetch');
-            $branches = $this->getBranches($mode);
-            if (!$branches) {
-                Console::output('There is no new releases');
+            if (!$this->newVersion) {
+                $this->execCommand('git fetch');
+                Console::output('Git fetched');
+                $branches = $this->getBranches($mode);
+                Console::output('Branches loaded');
+                if (!$branches) {
+                    Console::output('There is no new releases');
 
-                return false;
-            }*/
-            $branches = ['0.0.3', '0.0.4', '0.0.5'];
-            $select = Console::select('Choose branch: ', $branches);
-            $version = $branches[$select];
-            Console::output('Selected version: ' . $version);
-            $this->newVersion = $version;
+                    return false;
+                }
+                $select = Console::select('Choose branch: ', $branches);
+                $version = $branches[$select];
+                Console::output('Selected version: ' . $version);
+                $this->setNewVersion($version);
+            }
             Console::output(($mode === self::MODE_DOWNGRADE ? 'Downgrade' : 'Upgrade') . ' to version: ' . $this->newVersion);
 
             $steps = $this->getSteps($mode);
-            var_dump($steps);
             foreach ($steps as $stepName => $commands) {
                 if (is_string($commands) && in_array($commands, $this->module->systemSteps, true)) {
                     Console::output('Run step : ' . $commands);
@@ -268,16 +303,17 @@ class ReleaseController extends Controller
      */
     protected function migrateUp($version)
     {
-        Console::output("Migrate up");
+        Console::output('Migrate up');
         list($return_var, $result) = $this->execCommand(
-            "./yii updater/migrations/up 0 " . $version . " --interactive=0"
+            './yii updater/migrations/up 0 ' . $version . ' --interactive=0',
+            $this->releasePath
         );
-        if ($return_var == 0) {
-            Console::output("Migrate complete");
+        if ($return_var === 0) {
+            Console::output('Migrate complete');
 
             return true;
         }
-        Console::output("Error while migrate process");
+        Console::output('Error while migrate process');
         var_dump($result);
 
         return false;
@@ -377,16 +413,16 @@ class ReleaseController extends Controller
         return $more ? 1 : -1;
     }
 
-    protected function updateFiles($version, $path)
+    protected function updateFiles()
     {
+
         Console::output('Process Git');
-        $command = 'git clone ' . $this->module->gitUrl . ' --branch ' . $this->module->releasePrefix . $version . ' --single-branch --depth=1 ' . $path;
+        $fullPath = $this->getRelativePath($this->module->path, $this->releasePath);
+        $command = 'git clone ' . $this->module->gitUrl . ' --branch ' . $this->branch . ' --single-branch --depth=1 ' . $fullPath;
         Console::output('Run ' . $command);
         list($return_var, $result) = $this->execCommand($command);
         if ($return_var === 0) {
             Console::output('Files updated');
-            $this->execCommand('chmod +x ' . $path . DIRECTORY_SEPARATOR . 'yii');
-            $this->runComposer();
 
             return true;
         }
@@ -397,15 +433,19 @@ class ReleaseController extends Controller
     }
 
     /**
-     * @param $command
+     * @param string $command
+     * @param string $path
      *
      * @return array
      */
-    protected function execCommand($command)
+    protected function execCommand($command, $path = null)
     {
         $result = [];
         $return_var = 0;
-        $command = "cd " . $this->module->path . " && " . $command;
+        if (!$path) {
+            $path = $this->module->path;
+        }
+        $command = 'cd ' . $path . ' && ' . $command;
         exec($command, $result, $return_var);
 
         return [$return_var, $result];
@@ -597,7 +637,68 @@ class ReleaseController extends Controller
         $this->deleteLock();
     }
 
-    private function runUserCommands($stepName, $commands)
+    private function runUserCommands($stepName, array $commands)
     {
+        Console::output('Run: ' . $stepName);
+        foreach ($commands as $key => $command) {
+            if (is_array($command)) {
+                $answer = Console::select($key, ['0' => 'No', '1' => 'Yes']);
+                if (!isset($command[$answer]) || $command[$answer] === false) {
+                    continue;
+                } else {
+                    if (is_array($command[$answer])) {
+                        if (!isset($command[$answer]['before'])) {
+                            continue;
+                        } else {
+                            Console::output('Exec ' . $command[$answer]['before']);
+                            $this->execCommand($command[$answer]['before'], $this->releasePath);
+                            if (isset($command[$answer]['after'])) {
+                                $this->registerAfterCommand($key, $command[$answer]['after']);
+                            }
+                        }
+                    } else {
+                        Console::output('Exec ' . $command[$answer]);
+                        $this->execCommand($command[$answer], $this->releasePath);
+                    }
+                }
+            } else {
+                Console::output('Exec ' . $command);
+                $this->execCommand($command, $this->releasePath);
+            }
+        }
+    }
+
+    private function getRelativePath($from, $to)
+    {
+        // some compatibility fixes for Windows paths
+        $from = is_dir($from) ? rtrim($from, '\/') . '/' : $from;
+        $to = is_dir($to) ? rtrim($to, '\/') . '/' : $to;
+        $from = str_replace('\\', '/', $from);
+        $to = str_replace('\\', '/', $to);
+
+        $from = explode('/', $from);
+        $to = explode('/', $to);
+        $relPath = $to;
+
+        foreach ($from as $depth => $dir) {
+            // find first non-matching dir
+            if ($dir === $to[$depth]) {
+                // ignore this directory
+                array_shift($relPath);
+            } else {
+                // get number of remaining dirs to $from
+                $remaining = count($from) - $depth;
+                if ($remaining > 1) {
+                    // add traversals up to first matching dir
+                    $padLength = (count($relPath) + $remaining - 1) * -1;
+                    $relPath = array_pad($relPath, $padLength, '..');
+                    break;
+                } else {
+                    $relPath[0] = './' . $relPath[0];
+                }
+            }
+        }
+
+        return implode('/', $relPath);
     }
 }
