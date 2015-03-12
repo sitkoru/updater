@@ -44,7 +44,7 @@ class Module extends \yii\base\Module
      */
     public $versionFileTemplate = <<<EOF
 <?php
-        define("%constant%", "%version%");
+        define('%constant%', '%version%');
 
 EOF;
     /**
@@ -80,6 +80,9 @@ EOF;
     ];
 
     public $nginx = [];
+    public $composer = [
+        'php composer.phar update --no-dev --prefer-dist -o'
+    ];
 
     public $clearCache = true;
 
@@ -91,9 +94,7 @@ EOF;
     public $appUpdateStoppers = [];
 
     public $systemSteps = [
-        'files',
-        'migrations',
-        'composerCopy',
+        'main',
         'nginx'
     ];
 }
