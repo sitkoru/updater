@@ -55,7 +55,7 @@ EOF;
     /**
      * @var string Prefix to filter git branches
      */
-    public $releasePrefix = 'origin/release-';
+    public $releasePrefix = 'release-';
 
     /**
      * @var array Update process steps

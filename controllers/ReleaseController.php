@@ -298,8 +298,6 @@ class ReleaseController extends Controller
         if ($this->checkAppPreventUpdate()) {
             Console::output('Starting upgrade');
             if (!$this->newVersion) {
-                $this->execCommand('git fetch');
-                Console::output('Git fetched');
                 $this->branches = $this->getBranches($mode);
                 Console::output('Branches loaded');
                 if (!$this->branches) {
@@ -385,13 +383,15 @@ class ReleaseController extends Controller
     protected function getBranches($mode)
     {
         $branches = [];
-
-        list($return_var, $result) = $this->execCommand('git branch -r --no-color');
+        $command = 'git ls-remote --heads origin | grep "' . $this->module->releasePrefix . '"';
+        Console::output('Exec ' . $command);
+        list($return_var, $result) = $this->execCommand($command);
         if ($return_var !== 0) {
             return false;
         }
         foreach ($result as $branch) {
-            $branch = trim($branch);
+            $branch = trim(explode("\t", $branch)[1]);
+            $branch = str_ireplace('refs/heads/', '', $branch);
             if (stripos($branch, $this->module->releasePrefix) === 0) {
                 $version = trim($branch, $this->module->releasePrefix);
                 switch ($mode) {
