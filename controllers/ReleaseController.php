@@ -481,6 +481,7 @@ class ReleaseController extends Controller
         if (!$path) {
             $path = $this->module->path;
         }
+        $command = str_ireplace('%release_dir%', $this->releasePath, $command);
         $command = 'cd ' . $path . ' && ' . $command;
         exec($command, $result, $return_var);
 
