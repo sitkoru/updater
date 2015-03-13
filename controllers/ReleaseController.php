@@ -270,7 +270,7 @@ class ReleaseController extends Controller
 
     private function runEnvironment($environment, $path)
     {
-        $this->execCommand('./init --env=' . $environment . ' --overwrite=n', $path ?: $this->releasePath);
+        $this->execCommand('./init --env=' . $environment . ' --overwrite=a', $path ?: $this->releasePath);
     }
 
     private function runMigrations($branch, $mode)
