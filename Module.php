@@ -71,6 +71,7 @@ EOF;
 
     public $scenarios = [
         'default' => [
+            'stoppers',
             'before',
             'git',
             'composer',
@@ -91,10 +92,13 @@ EOF;
     /**
      * @var array Classes with static method check(), that can stop or pause update process
      */
-    public $appUpdateStoppers = [];
+    public $appUpdateStoppers = [
+        'default' => []
+    ];
 
     public $systemSteps = [
         'main',
-        'nginx'
+        'nginx',
+        'stoppers'
     ];
 }

@@ -27,6 +27,7 @@ class ReleaseController extends Controller
     public $module;
 
     private $scenario = [];
+    private $scenarioName;
 
     private $afterCommands = [];
     private $newVersion;
@@ -87,7 +88,8 @@ class ReleaseController extends Controller
 
             $scenarios = array_keys($this->module->scenarios);
             $scenario = Console::select('Choose scenario: ', $scenarios);
-            $this->scenario = $this->module->scenarios[$scenarios[$scenario]];
+            $this->scenarioName = $scenarios[$scenario];
+            $this->scenario = $this->module->scenarios[$this->scenarioName];
         } else {
             $this->scenario = reset($this->module->scenarios);
         }
@@ -554,23 +556,23 @@ class ReleaseController extends Controller
 
     private function checkAppPreventUpdate()
     {
-        if (count($this->module->appUpdateStoppers)) {
-            foreach ($this->module->appUpdateStoppers as $stopperClass) {
+        if (count($this->module->appUpdateStoppers[$this->scenarioName])) {
+            foreach ($this->module->appUpdateStoppers[$this->scenarioName] as $stopperClass) {
                 $stopper = new $stopperClass();
                 if ($stopper instanceof UpdateStopper) {
                     $canProcess = $stopper->check();
                     if ($canProcess !== true) {
                         Console::output(
-                            $stopperClass . " prevent update process with message '" . $canProcess['message'] . "'"
+                            $stopperClass . ' prevent update process with message \'' . $canProcess['message'] . "'"
                         );
                         $answer = Console::select(
-                            "What should we do?",
+                            'What should we do?',
                             [
                                 self::PREVENT_WAIT   => 'Wait. Updater would ask for permission every 5 sec and proceed after positive answer',
                                 self::PREVENT_CANCEL => 'Cancel update',
                             ]
                         );
-                        if ($answer == self::PREVENT_CANCEL) {
+                        if ($answer === self::PREVENT_CANCEL) {
                             $this->deleteLock();
 
                             return false;
@@ -579,7 +581,7 @@ class ReleaseController extends Controller
                                 $canProcess = $stopper->check();
                                 if ($canProcess !== true) {
                                     Console::output(
-                                        "Still waiting: " . $canProcess['message'] . ". Sleep for 5 seconds"
+                                        'Still waiting: ' . $canProcess['message'] . '. Sleep for 5 seconds'
                                     );
                                     sleep(5);
                                 } else {
