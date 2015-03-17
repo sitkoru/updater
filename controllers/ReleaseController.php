@@ -79,11 +79,8 @@ class ReleaseController extends Controller
         return $prefix . $branch;
     }
 
-    public function actionIndex($branch = null)
+    public function actionIndex()
     {
-        if ($branch) {
-            $this->setNewVersion($branch, false);
-        }
         if (count($this->module->scenarios) > 1) {
 
             $scenarios = array_keys($this->module->scenarios);
