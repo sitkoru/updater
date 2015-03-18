@@ -301,7 +301,7 @@ class ReleaseController extends Controller
                 Console::output('Branches loaded');
                 if (!$this->branches) {
                     Console::output('There is no new releases');
-
+                    $this->deleteLock();
                     return false;
                 }
                 $select = Console::select('Choose branch: ', $this->branches);
