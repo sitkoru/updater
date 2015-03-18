@@ -504,7 +504,14 @@ class ReleaseController extends Controller
         }
         $command = str_ireplace('%release_dir%', $this->releasePath, $command);
 
-        return Console::exec($command, $path);
+        list($exitCode, $output, $errors) = Console::exec($command, $path);
+        if ($exitCode > 0) {
+            Console::output('There some errors:');
+            Console::output($output);
+            Console::output($errors);
+        }
+
+        return [$exitCode, $output];
     }
 
     private function downgrade()

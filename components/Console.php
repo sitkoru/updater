@@ -46,9 +46,10 @@ class Console extends \yii\helpers\Console
             null);
         $output = stream_get_contents($pipes[1]);
         fclose($pipes[1]);
+        $errors = stream_get_contents($pipes[2]);
         fclose($pipes[2]);
         $code = proc_close($process);
 
-        return [$code, $output];
+        return [$code, $output, $errors];
     }
 }
