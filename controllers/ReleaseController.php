@@ -638,7 +638,7 @@ class ReleaseController extends Controller
                     continue;
                 } else {
                     if (is_array($command[$answer])) {
-                        foreach ($commands[$answer] as $answerCommand) {
+                        foreach ($command[$answer] as $answerCommand) {
                             Console::output('Exec ' . $answerCommand);
                             $this->execCommand($answerCommand,
                                 $this->releasePath);
