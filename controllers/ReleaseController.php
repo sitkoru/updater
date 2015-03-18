@@ -48,7 +48,8 @@ class ReleaseController extends Controller
             if (file_exists($this->module->versionFilePath)) {
                 require_once($this->module->versionFilePath);
                 if (defined($this->module->versionConstant)) {
-                    $this->module->currentVersion = constant($this->module->versionConstant);
+                    $this->module->currentVersion
+                        = constant($this->module->versionConstant);
                 }
             }
         }
@@ -58,13 +59,15 @@ class ReleaseController extends Controller
         if (!$this->module->scenarios) {
             throw new Exception('You should define scenarios');
         }
-        Console::output('Starting process. Current version is ' . $this->module->currentVersion);
+        Console::output('Starting process. Current version is '
+            . $this->module->currentVersion);
     }
 
     private function setNewVersion($version, $withPrefix = true)
     {
         $this->newVersion = $version;
-        $this->releasePath = $this->module->releasesDir . DIRECTORY_SEPARATOR . $this->newVersion;
+        $this->releasePath = $this->module->releasesDir . DIRECTORY_SEPARATOR
+            . $this->newVersion;
         if ($withPrefix) {
             $this->branch = $this->getFullBranchName($this->newVersion);
         } else {
@@ -135,7 +138,8 @@ class ReleaseController extends Controller
                     foreach ($stepNames as $stepName) {
                         if (array_key_exists($stepName, $this->module->steps)) {
                             $steps[$stepName] = $this->module->steps[$stepName];
-                        } elseif (in_array($stepName, $this->module->systemSteps, true)) {
+                        } elseif (in_array($stepName,
+                            $this->module->systemSteps, true)) {
                             $steps[$stepName] = $stepName;
                         } else {
                             $this->deleteLock();
@@ -197,7 +201,8 @@ class ReleaseController extends Controller
         Console::output('Run composer');
         $this->runComposerCopy();
         foreach ($this->module->composer as $command) {
-            list($returnVar, $result) = $this->execCommand($command, $this->currentPath);
+            list($returnVar, $result) = $this->execCommand($command,
+                $this->currentPath);
             if ($returnVar !== 0) {
                 Console::output('Composer error: ');
                 var_dump($result);
@@ -210,11 +215,15 @@ class ReleaseController extends Controller
 
     private function runComposerCopy()
     {
-        list($returnVar, $result) = $this->execCommand('cp -a ' . $this->module->path . DIRECTORY_SEPARATOR . 'vendor ' . $this->currentPath);
+        list($returnVar, $result) = $this->execCommand('cp -a '
+            . $this->module->path . DIRECTORY_SEPARATOR . 'vendor '
+            . $this->currentPath);
         if ($returnVar !== 0) {
             var_dump($result);
         }
-        list($returnVar, $result) = $this->execCommand('cp ' . $this->module->path . DIRECTORY_SEPARATOR . 'composer.lock ' . $this->currentPath);
+        list($returnVar, $result) = $this->execCommand('cp '
+            . $this->module->path . DIRECTORY_SEPARATOR . 'composer.lock '
+            . $this->currentPath);
         if ($returnVar !== 0) {
             var_dump($result);
         }
@@ -226,14 +235,16 @@ class ReleaseController extends Controller
         $changed = false;
         foreach ($this->module->nginx as $file => $string) {
             if (file_exists($file)) {
-                file_put_contents($file, str_ireplace('%release_dir%', $this->releasePath, $string));
+                file_put_contents($file,
+                    str_ireplace('%release_dir%', $this->releasePath, $string));
                 $changed = true;
             } else {
                 Console::output('File ' . $file . ' doens\'t exists. Skip');
             }
         }
         if ($changed) {
-            list($return_var, $result) = $this->execCommand('nginx -t && /etc/init.d/nginx reload');
+            list($return_var, $result)
+                = $this->execCommand('nginx -t && /etc/init.d/nginx reload');
             if ($return_var !== 0) {
                 Console::output('Error on nginx reloading');
                 var_dump($result);
@@ -245,7 +256,8 @@ class ReleaseController extends Controller
 
     private function runFiles($branch)
     {
-        $this->currentPath = $this->module->releasesDir . DIRECTORY_SEPARATOR . $branch;
+        $this->currentPath = $this->module->releasesDir . DIRECTORY_SEPARATOR
+            . $branch;
 
         if (!is_dir($this->currentPath)) {
             mkdir($this->currentPath);
@@ -258,7 +270,8 @@ class ReleaseController extends Controller
             return false;
         }
         if ($this->module->environment) {
-            $this->runEnvironment($this->module->environment, $this->currentPath);
+            $this->runEnvironment($this->module->environment,
+                $this->currentPath);
         }
 
 
@@ -267,7 +280,8 @@ class ReleaseController extends Controller
 
     private function runEnvironment($environment, $path)
     {
-        $this->execCommand('./init --env=' . $environment . ' --overwrite=a', $path ?: $this->releasePath);
+        $this->execCommand('./init --env=' . $environment . ' --overwrite=a',
+            $path ?: $this->releasePath);
     }
 
     private function runMigrations($branch, $mode)
@@ -302,6 +316,7 @@ class ReleaseController extends Controller
                 if (!$this->branches) {
                     Console::output('There is no new releases');
                     $this->deleteLock();
+
                     return false;
                 }
                 $select = Console::select('Choose branch: ', $this->branches);
@@ -309,7 +324,8 @@ class ReleaseController extends Controller
                 Console::output('Selected version: ' . $version);
                 $this->setNewVersion($version);
             }
-            Console::output(($mode === self::MODE_DOWNGRADE ? 'Downgrade' : 'Upgrade') . ' to version: ' . $this->newVersion);
+            Console::output(($mode === self::MODE_DOWNGRADE ? 'Downgrade'
+                    : 'Upgrade') . ' to version: ' . $this->newVersion);
 
             $steps = $this->getSteps($mode);
             foreach ($steps as $stepName => $commands) {
@@ -361,7 +377,8 @@ class ReleaseController extends Controller
     {
         Console::output("Migrate down");
         list($return_var, $result) = $this->execCommand(
-            "./yii updater/migrations/to-app-version " . $version . " --interactive=0"
+            "./yii updater/migrations/to-app-version " . $version
+            . " --interactive=0"
         );
         if ($return_var == 0) {
             Console::output("Migrate complete");
@@ -382,7 +399,8 @@ class ReleaseController extends Controller
     protected function getBranches($mode)
     {
         $branches = [];
-        $command = 'git ls-remote --heads origin | grep "' . $this->module->releasePrefix . '"';
+        $command = 'git ls-remote --heads origin | grep "'
+            . $this->module->releasePrefix . '"';
         Console::output('Exec ' . $command);
         list($return_var, $result) = $this->execCommand($command);
         if ($return_var !== 0) {
@@ -395,12 +413,16 @@ class ReleaseController extends Controller
                 $version = trim($branch, $this->module->releasePrefix);
                 switch ($mode) {
                     case self::MODE_UPGRADE:
-                        if ($this->compareVersions($version, $this->module->currentVersion) === 1) {
+                        if ($this->compareVersions($version,
+                                $this->module->currentVersion) === 1
+                        ) {
                             $branches[] = $version;
                         }
                         break;
                     case self::MODE_DOWNGRADE:
-                        if ($this->compareVersions($version, $this->module->currentVersion) === -1) {
+                        if ($this->compareVersions($version,
+                                $this->module->currentVersion) === -1
+                        ) {
                             $branches[] = $version;
                         }
                         break;
@@ -452,8 +474,10 @@ class ReleaseController extends Controller
     {
         $fullBranchName = $this->getFullBranchName($branch);
         Console::output('Process Git');
-        $fullPath = $this->getRelativePath($this->module->path, $this->currentPath);
-        $command = 'git clone ' . $this->module->gitUrl . ' --branch ' . $fullBranchName . ' --single-branch --depth=1 ' . $fullPath;
+        $fullPath = $this->getRelativePath($this->module->path,
+            $this->currentPath);
+        $command = 'git clone ' . $this->module->gitUrl . ' --branch '
+            . $fullBranchName . ' --single-branch --depth=1 ' . $fullPath;
         Console::output('Run ' . $command);
         list($return_var, $result) = $this->execCommand($command);
         if ($return_var === 0) {
@@ -519,10 +543,13 @@ class ReleaseController extends Controller
 
     private function saveVersion()
     {
-        Console::output('Save new version to ' . $this->currentPath . DIRECTORY_SEPARATOR . $this->module->versionFilePath);
-        $php = str_ireplace('%constant%', $this->module->versionConstant, $this->module->versionFileTemplate);
+        Console::output('Save new version to ' . $this->currentPath
+            . DIRECTORY_SEPARATOR . $this->module->versionFilePath);
+        $php = str_ireplace('%constant%', $this->module->versionConstant,
+            $this->module->versionFileTemplate);
         $php = str_ireplace('%version%', $this->newVersion, $php);
-        file_put_contents($this->currentPath . DIRECTORY_SEPARATOR . $this->module->versionFilePath, $php);
+        file_put_contents($this->currentPath . DIRECTORY_SEPARATOR
+            . $this->module->versionFilePath, $php);
     }
 
     private function registerAfterCommand($key, $command)
@@ -554,13 +581,18 @@ class ReleaseController extends Controller
     private function checkAppPreventUpdate()
     {
         if (count($this->module->appUpdateStoppers[$this->scenarioName])) {
-            foreach ($this->module->appUpdateStoppers[$this->scenarioName] as $stopperClass) {
+            foreach (
+                $this->module->appUpdateStoppers[$this->scenarioName] as
+                $stopperClass
+            ) {
                 $stopper = new $stopperClass();
                 if ($stopper instanceof UpdateStopper) {
                     $canProcess = $stopper->check();
                     if ($canProcess !== true) {
                         Console::output(
-                            $stopperClass . ' prevent update process with message \'' . $canProcess['message'] . "'"
+                            $stopperClass
+                            . ' prevent update process with message \''
+                            . $canProcess['message'] . "'"
                         );
                         $answer = Console::select(
                             'What should we do?',
@@ -578,7 +610,9 @@ class ReleaseController extends Controller
                                 $canProcess = $stopper->check();
                                 if ($canProcess !== true) {
                                     Console::output(
-                                        'Still waiting: ' . $canProcess['message'] . '. Sleep for 5 seconds'
+                                        'Still waiting: '
+                                        . $canProcess['message']
+                                        . '. Sleep for 5 seconds'
                                     );
                                     sleep(5);
                                 } else {
@@ -604,18 +638,15 @@ class ReleaseController extends Controller
                     continue;
                 } else {
                     if (is_array($command[$answer])) {
-                        if (!isset($command[$answer]['before'])) {
-                            continue;
-                        } else {
-                            Console::output('Exec ' . $command[$answer]['before']);
-                            $this->execCommand($command[$answer]['before'], $this->releasePath);
-                            if (isset($command[$answer]['after'])) {
-                                $this->registerAfterCommand($key, $command[$answer]['after']);
-                            }
+                        foreach ($commands[$answer] as $answerCommand) {
+                            Console::output('Exec ' . $answerCommand);
+                            $this->execCommand($answerCommand,
+                                $this->releasePath);
                         }
                     } else {
                         Console::output('Exec ' . $command[$answer]);
-                        $this->execCommand($command[$answer], $this->releasePath);
+                        $this->execCommand($command[$answer],
+                            $this->releasePath);
                     }
                 }
             } else {
