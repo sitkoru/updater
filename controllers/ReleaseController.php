@@ -499,16 +499,12 @@ class ReleaseController extends Controller
      */
     protected function execCommand($command, $path = null)
     {
-        $result = [];
-        $return_var = 0;
         if (!$path) {
             $path = $this->module->path;
         }
         $command = str_ireplace('%release_dir%', $this->releasePath, $command);
-        $command = 'cd ' . $path . ' && ' . $command;
-        exec($command, $result, $return_var);
 
-        return [$return_var, $result];
+        return Console::exec($command, $path);
     }
 
     private function downgrade()

@@ -21,10 +21,34 @@ class Console extends \yii\helpers\Console
         }
         static::stdout("Select:");
         $input = static::stdin();
-        if (!in_array($input, array_keys($options))) {
+        if (!array_key_exists($input, $options)) {
             goto top;
         }
 
         return $input;
+    }
+
+    /**
+     * @param $cwd
+     * @param $command
+     *
+     * @return array
+     */
+    public static function exec($command, $cwd = null)
+    {
+        $cwd = $cwd ?: __DIR__;
+        $descriptorspec = array(
+            0 => array('pipe', 'r'),  // stdin
+            1 => array('pipe', 'w'),  // stdout
+            2 => array('pipe', 'w'),  // stderr
+        );
+        $process = proc_open($command, $descriptorspec, $pipes, $cwd,
+            null);
+        $output = stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $code = proc_close($process);
+
+        return [$code, $output];
     }
 }
