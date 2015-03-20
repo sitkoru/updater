@@ -511,7 +511,7 @@ class ReleaseController extends Controller
             Console::output($errors);
         }
 
-        return [$exitCode, $output];
+        return [$exitCode, explode(PHP_EOL, trim($output, PHP_EOL))];
     }
 
     private function downgrade()
