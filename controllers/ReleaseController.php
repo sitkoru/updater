@@ -287,6 +287,7 @@ class ReleaseController extends Controller
     private function runMigrations($branch, $mode)
     {
         Console::output('Run migrations');
+        $this->execCommand('chmod +x yii', $this->currentPath);
         $migrated = false;
         switch ($mode) {
             case self::MODE_UPGRADE:
