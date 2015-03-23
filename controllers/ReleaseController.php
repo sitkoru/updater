@@ -280,14 +280,15 @@ class ReleaseController extends Controller
 
     private function runEnvironment($environment, $path)
     {
+        $this->execCommand('chmod +x init', $path ?: $this->releasePath);
         $this->execCommand('./init --env=' . $environment . ' --overwrite=a',
             $path ?: $this->releasePath);
+        $this->execCommand('chmod +x yii', $path ?: $this->releasePath);
     }
 
     private function runMigrations($branch, $mode)
     {
         Console::output('Run migrations');
-        $this->execCommand('chmod +x yii', $this->currentPath);
         $migrated = false;
         switch ($mode) {
             case self::MODE_UPGRADE:
