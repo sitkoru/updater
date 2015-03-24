@@ -244,7 +244,7 @@ class ReleaseController extends Controller
         }
         if ($changed) {
             list($return_var, $result)
-                = $this->execCommand('nginx -t && /etc/init.d/nginx reload');
+                = $this->execCommand($this->module->nginxCommand);
             if ($return_var !== 0) {
                 Console::output('Error on nginx reloading');
                 var_dump($result);

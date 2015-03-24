@@ -81,6 +81,7 @@ EOF;
     ];
 
     public $nginx = [];
+    public $nginxCommand = 'nginx -t && /etc/init.d/nginx restart';
     public $composer = [
         'php composer.phar update --no-dev --prefer-dist -o'
     ];
