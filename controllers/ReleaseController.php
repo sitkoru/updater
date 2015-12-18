@@ -401,7 +401,7 @@ class ReleaseController extends Controller
     protected function getBranches($mode)
     {
         $branches = [];
-        $command = 'git ls-remote --heads '.$this->module->gitUrl.' | grep "'
+        $command = 'git ls-remote --heads ' . $this->module->gitUrl . ' | grep "'
             . $this->module->releasePrefix . '"';
         Console::output('Exec ' . $command);
         list($return_var, $result) = $this->execCommand($command);
@@ -505,6 +505,7 @@ class ReleaseController extends Controller
             $path = $this->module->path;
         }
         $command = str_ireplace('%release_dir%', $this->releasePath, $command);
+        $command = str_ireplace('%version%', $this->newVersion, $command);
 
         list($exitCode, $output, $errors) = Console::exec($command, $path);
         if ($exitCode > 0) {
