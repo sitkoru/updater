@@ -284,6 +284,12 @@ class ReleaseController extends Controller
         $command = "cd " . $this->module->path . " && " . $command;
         exec($command, $result, $return_var);
 
+        if ($return_var !== 0) {
+            Console::output('Command was finished, with status: ' . $return_var);
+            Console::output('Output: ');
+            print_r($result);
+        }
+
         return [$return_var, $result];
     }
 
